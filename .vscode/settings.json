@@ -1,0 +1,14 @@
+{
+    "cSpell.words": [
+        "DOBU",
+        "kodu"
+    ],
+    "python.analysis.fixAll": [
+        "source.convertImportFormat",
+        "source.unusedImports"
+    ],
+    "editor.codeActionsOnSave": {
+        "source.fixAll": "always"
+    },
+    "editor.formatOnSave": true
+}
