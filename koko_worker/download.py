@@ -14,12 +14,12 @@ class DownloadService:
     def is_study_cached(self, name: str) -> bool:
         return self.studies_dir.joinpath(name).exists()
     
-    def download_study(self, name: str) -> None:
+    async def download_study(self, name: str) -> None:
         study_dir = self.studies_dir.joinpath(name)
         study_dir.mkdir(parents=True, exist_ok=False)
         file = study_dir.joinpath('data.zip')
         with open(file, 'wb') as f:
-            request_file(f"study/{name}/download", "GET",None, f)
+            await request_file(f"study/{name}/download", "GET",None, f)
             logger.info("Finished downloading")
             
         with zipfile.ZipFile(file, 'r') as zip:

@@ -4,12 +4,10 @@
         "gethostname",
         "kodu"
     ],
-    "python.analysis.fixAll": [
-        "source.convertImportFormat",
-        "source.unusedImports"
-    ],
+    "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
-        "source.fixAll": "always"
+        "source.fixAll.ruff": "always",
+        "source.organizeImports.ruff": "always"
     },
-    "editor.formatOnSave": true
+    "ruff.fixAll": true,
 }

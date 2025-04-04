@@ -8,12 +8,12 @@ authors = [
 ]
 requires-python = ">=3.13"
 dependencies = [
+    "aiohttp>=3.11.16",
     "fastapi[standard]>=0.115.12",
     "filelock>=3.18.0",
     "loguru>=0.7.3",
     "psutil>=7.0.0",
     "python-multipart>=0.0.20",
-    "requests>=2.32.3",
     "tinydb>=4.8.2",
 ]
 
