@@ -15,8 +15,10 @@ from shared.models.node import NodeCapabilities
 async def main(config_path=str | None):
     config = WorkerConfig.from_file(None if config_path is None else Path(config_path))
     logger.info(f"Loaded config: {config}")
-    capabilities = NodeCapabilities.from_system()
-    logger.info(f"Analyzed system: {capabilities}")
+    capabilities, uv_path = await NodeCapabilities.from_system()
+    if uv_path is None:
+        logger.error("uv executable could not be found")
+    logger.info(f"Analyzed system: {capabilities}\nuv path: {uv_path}")
 
     download_service = DownloadService(config.data_dir)
 
