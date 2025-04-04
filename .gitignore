@@ -176,6 +176,7 @@ cython_debug/
 
 # Project specific
 data/
+data_worker/
 .DS_Store
 **.zip
 test-project/

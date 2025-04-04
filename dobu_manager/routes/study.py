@@ -7,6 +7,7 @@ import sys
 from typing import Annotated
 
 from fastapi import File, Form, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 from loguru import logger
 from pydantic import BaseModel
 from dobu_manager.app import app
@@ -19,7 +20,7 @@ from shared.models.study import CreateStudy, Study
 class KoduConfig(BaseModel):
     objective_function: str
     objective_file: str
-
+    
 @app.post("/study/test")
 async def test_study(
     study_name: Annotated[str, Form()], 
@@ -34,17 +35,20 @@ async def test_study(
         shutil.rmtree(study_dir)
     study_dir.mkdir(parents=True)
     
-        
-    with zipfile.ZipFile(data.file, 'r') as zip:
+    # Save the uploaded zip file to the study directory as data.zip
+    zip_path = study_dir.joinpath("data.zip")
+    with open(zip_path, "wb") as buffer:
+        shutil.copyfileobj(data.file, buffer)
+    
+    with zipfile.ZipFile(zip_path, 'r') as zip:
         size = sum([zip_info.file_size for zip_info in zip.filelist])
-        logger.info(f"Extracting code-base [{(size / 10e6):.2f} MB]to {study_dir}")
+        logger.info(f"Extracting code-base [{(size / 10e6):.2f} MB] to {study_dir}")
         filename = pathlib.Path(data.filename).with_suffix('').name
         zip.extractall(study_dir)
         shutil.rmtree(study_dir.joinpath("__MACOSX"))
         for item in study_dir.joinpath(filename).iterdir():
             shutil.move(item, study_dir)
         shutil.rmtree(study_dir.joinpath(filename))
-        
     
     config_file = study_dir.joinpath('kodu-optim.json')
     if not config_file.exists():
@@ -55,7 +59,7 @@ async def test_study(
     
     try:
         sys.path.insert(0, study_dir)
-        module = importlib.import_module(f".{config.objective_file.replace(".py", '')}", package='.'.join(study_dir.relative_to(os.getcwd()).parts))
+        module = importlib.import_module(f".{config.objective_file.replace('.py', '')}", package='.'.join(study_dir.relative_to(os.getcwd()).parts))
 
         if not hasattr(module, config.objective_function):
             raise HTTPException(400, detail="Objective Function not found")
@@ -63,14 +67,14 @@ async def test_study(
         sig = signature(module_objective_function)
         arg_count = len(sig.parameters)
         logger.info(f"Objective function '{config.objective_function}' has {arg_count} arguments.")
-        if arg_count > 1 :
+        if arg_count > 1:
             raise HTTPException(400, detail="Objective Function contains too many arguments")
         sys.path.pop(0)
     except ImportError as e:
         logger.error(f"The objective function could not be imported: {e.msg}")
         raise HTTPException(400, detail="Objective file is not importable")
     return config
-    
+
 @app.post("/study")
 async def create_study(data: CreateStudy) -> Study:
     study_service = StudyService.get()
@@ -121,3 +125,12 @@ async def pause_study(name: str) -> Study:
         raise HTTPException(404, detail="Study with name does not exists")
     return study_service.pause(name)
 
+@app.get("/study/{name}/download")
+async def download_study(name: str):
+    study_service = StudyService.get()
+    result = study_service.get_by_name(name)
+    if result is None:
+        raise HTTPException(404, detail="Study with name does not exists")
+    study_dir = study_service.study_directory.joinpath(name)
+    zip_file = study_dir.joinpath("data.zip")
+    return  FileResponse(zip_file, media_type='application/octet-stream', filename='data.zip')

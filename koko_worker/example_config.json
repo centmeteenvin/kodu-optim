@@ -1,0 +1,5 @@
+{
+    "orchestrator_host": "http://localhost",
+    "orchestrator_port": 8080,
+    "data_dir": "./data_worker"
+}

@@ -1,11 +1,22 @@
 from typing import Literal
 from pydantic import BaseModel
+import os
+import psutil
+import socket
 
 
 class NodeCapabilities(BaseModel):
     cpu_count: int
     memory_gb: float
     hostname: str
+
+    @staticmethod
+    def from_system() -> "NodeCapabilities":
+        return NodeCapabilities(
+            cpu_count=os.cpu_count(),
+            memory_gb=psutil.virtual_memory().total / (1024 ** 3),
+            hostname=socket.gethostname()
+        )
 
 class NodeRegistration(BaseModel):
     node_id:str
