@@ -23,7 +23,10 @@ async def main(config_path=str | None):
     download_service = DownloadService(config.data_dir)
 
     cluster_service = ClusterService(
-        f"{capabilities.hostname}-{uuid4().hex[:4]}", capabilities, download_service
+        f"{capabilities.hostname}-{uuid4().hex[:4]}",
+        capabilities,
+        download_service,
+        uv_executable=uv_path,
     )
     await cluster_service.register()
 

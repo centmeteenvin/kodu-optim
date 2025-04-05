@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from pathlib import Path
 
 import aiohttp
 import aiohttp.client_exceptions
@@ -8,6 +9,7 @@ import aiohttp.http_exceptions
 from loguru import logger
 
 from koko_worker.download import DownloadService
+from koko_worker.environment import run_python_file, sync
 from koko_worker.pinger import Pinger
 from koko_worker.requests import request
 from shared.models.node import (
@@ -16,7 +18,7 @@ from shared.models.node import (
     NodeRegistrationSuccess,
     PingResult,
 )
-from shared.models.study import Study
+from shared.models.study import ExpandedStudy
 
 
 class ClusterService:
@@ -29,13 +31,18 @@ class ClusterService:
         return ClusterService._instance
 
     def __init__(
-        self, id: str, capabilities: NodeCapabilities, download_service=DownloadService
+        self,
+        id: str,
+        capabilities: NodeCapabilities,
+        download_service: DownloadService,
+        uv_executable: str,
     ):
         self.id = id
         self.capabilities = capabilities
         self._pinger: Pinger | None = None
-        self.current_study: Study | None = None
+        self.current_study: ExpandedStudy | None = None
         self.download_service = download_service
+        self.uv_executable = uv_executable
         ClusterService._instance = self
 
     async def register(self):
@@ -57,9 +64,9 @@ class ClusterService:
         self._pinger = Pinger(self.ping_interval, self.id)
         asyncio.create_task(self._pinger.run())
 
-    async def request_study(self) -> Study | None:
+    async def request_study(self) -> ExpandedStudy | None:
         try:
-            return await request("study/request", "GET", None, Study)
+            return await request("study/request", "GET", None, ExpandedStudy)
         except aiohttp.client_exceptions.ClientResponseError:
             return None
 
@@ -96,7 +103,16 @@ class ClusterService:
             await self.download_service.download_study(study.name)
         else:
             logger.info(f"Found the study cached {self.download_service.studies_dir}")
-        await asyncio.sleep(10)
+        study_dir = self.download_service.studies_dir.joinpath(study.name)
+        logger.info("Synchronizing virtual environment")
+        await sync(project_dir=study_dir, uv_executable=self.uv_executable)
+        executor_file = Path(__file__).parent.resolve().joinpath("executor.py")
+        await run_python_file(
+            project_dir=study_dir,
+            uv_executable=self.uv_executable,
+            python_file=executor_file,
+            args=f"--objective-file {study.objective_file} --objective-function {study.objective_function} --study-name {study.name} --storage {self.db_url}",
+        )
         self.current_study = None
 
     async def teardown(self):

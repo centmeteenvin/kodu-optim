@@ -12,7 +12,9 @@ dependencies = [
     "fastapi[standard]>=0.115.12",
     "filelock>=3.18.0",
     "loguru>=0.7.3",
+    "optuna>=4.2.1",
     "psutil>=7.0.0",
+    "psycopg2-binary>=2.9.10",
     "python-multipart>=0.0.20",
     "tinydb>=4.8.2",
 ]
@@ -30,5 +32,6 @@ packages = ["dobu_manager", "koko_worker"]
 
 [dependency-groups]
 dev = [
+    "optuna-dashboard>=0.18.0",
     "wheel>=0.45.1",
 ]

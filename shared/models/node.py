@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 import os
 import socket
@@ -14,7 +16,7 @@ class NodeCapabilities(BaseModel):
     hostname: str
 
     @staticmethod
-    async def from_system() -> "NodeCapabilities":
+    async def from_system() -> tuple[NodeCapabilities, str | None]:
         async def run_command(command: str) -> str | None:
             process = await asyncio.create_subprocess_shell(
                 command,
@@ -41,7 +43,7 @@ class NodeRegistration(BaseModel):
 
 
 class NodeRegistrationSuccess(BaseModel):
-    db_url: str
+    # db_url: str
     ping_interval: int
 
 
