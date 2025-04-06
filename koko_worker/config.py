@@ -10,8 +10,7 @@ _config_instance: WorkerConfig | None = None
 
 
 class WorkerConfig(BaseModel):
-    orchestrator_host: str = "http://localhost"
-    orchestrator_port: int = 8080
+    orchestrator_url: str = "http://localhost:8080"
     data_dir: Path = Path("./data_worker")
 
     @field_validator("data_dir", mode="before")

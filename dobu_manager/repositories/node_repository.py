@@ -19,4 +19,7 @@ def delete_node(id: str) -> bool:
 
 
 def find_node_by_id(id: str) -> Node | None:
-    return active_nodes.get(id).model_copy()
+    found = active_nodes.get(id)
+    if found is None:
+        return found
+    return found.model_copy()

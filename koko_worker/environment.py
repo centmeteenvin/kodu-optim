@@ -20,11 +20,11 @@ async def read_stream(stream: asyncio.StreamReader):
 
 async def sync(project_dir: Path, uv_executable: Path):
     process = await asyncio.create_subprocess_shell(
-        f"rm -rf .venv && {uv_executable} sync --frozen --no-install-workspace",
+        f"rm -rf .venv && {uv_executable} sync --no-install-workspace",
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
         env={"VIRTUAL_ENV": ".venv", "PYTHONUNBUFFERED": "1"},
-        cwd=project_dir,
+        cwd=project_dir.as_posix(),
     )
 
     stdout_task = asyncio.create_task(read_stream(process.stdout))

@@ -25,6 +25,9 @@ from shared.models.study import CodeBaseStudy, CreateStudy
 async def test_study(
     study_name: Annotated[str, Form()], data: Annotated[UploadFile, File()]
 ) -> KoduConfig:
+    if not study_name.isalnum():
+        raise HTTPException(400, detail="study name must be alpha numeric")
+
     if does_study_exists(study_name):
         raise HTTPException(400, detail="Study already exists")
 

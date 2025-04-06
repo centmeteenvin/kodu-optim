@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import asyncio
-from pathlib import Path
 
 import aiohttp
 import aiohttp.client_exceptions
 import aiohttp.http_exceptions
 from loguru import logger
 
+from koko_worker.config import WorkerConfig
 from koko_worker.download import DownloadService
 from koko_worker.environment import run_python_file, sync
 from koko_worker.pinger import Pinger
@@ -18,7 +18,7 @@ from shared.models.node import (
     NodeRegistrationSuccess,
     PingResult,
 )
-from shared.models.study import ExpandedStudy
+from shared.models.study import CodeBaseStudy
 
 
 class ClusterService:
@@ -40,7 +40,7 @@ class ClusterService:
         self.id = id
         self.capabilities = capabilities
         self._pinger: Pinger | None = None
-        self.current_study: ExpandedStudy | None = None
+        self.current_study: CodeBaseStudy | None = None
         self.download_service = download_service
         self.uv_executable = uv_executable
         ClusterService._instance = self
@@ -58,15 +58,15 @@ class ClusterService:
             logger.error("Failed to connect to orchestrator, are the settings correct?")
             exit(-1)
         logger.info(f"registration successful {result}")
-        self.db_url = result.db_url
+        self.db_url = WorkerConfig.get().orchestrator_url
         self.ping_interval = result.ping_interval
         logger.info("Creating pinger")
         self._pinger = Pinger(self.ping_interval, self.id)
         asyncio.create_task(self._pinger.run())
 
-    async def request_study(self) -> ExpandedStudy | None:
+    async def request_study(self) -> CodeBaseStudy | None:
         try:
-            return await request("study/request", "GET", None, ExpandedStudy)
+            return await request("study/request", "GET", None, CodeBaseStudy)
         except aiohttp.client_exceptions.ClientResponseError:
             return None
 
@@ -103,14 +103,13 @@ class ClusterService:
             await self.download_service.download_study(study.name)
         else:
             logger.info(f"Found the study cached {self.download_service.studies_dir}")
-        study_dir = self.download_service.studies_dir.joinpath(study.name)
-        logger.info("Synchronizing virtual environment")
+        study_dir = self.download_service.studies_dir.joinpath(study.name).absolute()
+        logger.info(f"Synchronizing virtual environment at: {study_dir.as_posix()}")
         await sync(project_dir=study_dir, uv_executable=self.uv_executable)
-        executor_file = Path(__file__).parent.resolve().joinpath("executor.py")
         await run_python_file(
             project_dir=study_dir,
             uv_executable=self.uv_executable,
-            python_file=executor_file,
+            python_file="execute",
             args=f"--objective-file {study.objective_file} --objective-function {study.objective_function} --study-name {study.name} --storage {self.db_url}",
         )
         self.current_study = None

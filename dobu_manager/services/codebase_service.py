@@ -112,12 +112,12 @@ def check_dependencies(path: Path) -> DependencyState:
     for dep in dependencies:
         try:
             req = Requirement(dep)
-            if req.name == "optuna":
+            if req.name == "kodu-optim" or "kodu_optim":
                 optuna_specifier = req.specifier
                 break
         except Exception:
             continue
     else:
-        return "optuna not found"
+        return "kodu-optim not found"
 
-    return "ok" if optuna_specifier.contains("4.2.1") else "invalid version"
+    return "ok" if optuna_specifier.contains("0.1.0") else "invalid version"

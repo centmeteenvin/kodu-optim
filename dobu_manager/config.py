@@ -34,8 +34,6 @@ class OrchestratorConfig:
     def __str__(self):
         return (
             f"OrchestratorConfig(host={self.host}, port={self.port}, "
-            f"db_host={self.db_host}, db_port={self.db_port}, "
-            f"db_user={self.db_user}, db_password=****, "
             f"ping_interval_seconds={self.ping_interval_seconds}, "
             f"db_url={self.db_url})"
         )

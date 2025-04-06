@@ -6,6 +6,7 @@ import shutil
 from functools import cache
 from pathlib import Path
 
+import optuna
 from fastapi import UploadFile
 
 from dobu_manager.config import OrchestratorConfig
@@ -31,11 +32,11 @@ def insert_study(data: CreateStudy) -> CodeBaseStudy:
         objective_file=data.objective_file,
         objective_function=data.objective_function,
     )
-    # optuna.create_study(
-    #     storage=OrchestratorConfig.get().db_url,
-    #     direction=study.direction,
-    #     study_name=study.name,
-    # )
+    optuna.create_study(
+        storage=OrchestratorConfig.get().db_url,
+        direction=study.direction,
+        study_name=study.name,
+    )
 
     create_study(study)
     return study

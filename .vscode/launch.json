@@ -10,6 +10,24 @@
             "request": "launch",
             "module": "dobu_manager.main",
             "console": "integratedTerminal"
+        },
+        {
+            "name": "execute",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "executor.main",
+            "args": [
+                "--objective-file",
+                "hello.py",
+                "--objective-function",
+                "object_function_1",
+                "--storage",
+                "http://localhost:8080",
+                "--study-name",
+                "test-study"
+            ],
+            "justMyCode": false,
+            "cwd": "test-project"
         }
     ]
 }

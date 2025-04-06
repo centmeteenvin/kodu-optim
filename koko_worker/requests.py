@@ -14,7 +14,7 @@ async def request(
     uri: str, method: HTTPMethod, data: BaseModel | None, result_type: Type[T]
 ) -> T:
     config = WorkerConfig.get()
-    url = f"{config.orchestrator_host}:{config.orchestrator_port}/{uri}"
+    url = f"{config.orchestrator_url}/{uri}"
     async with aiohttp.ClientSession() as session:
         if method == "GET":
             result = await session.get(url)
@@ -44,7 +44,7 @@ async def request_file(
     uri: str, method: HTTPMethod, data: BaseModel | None, output_file: IO
 ) -> None:
     config = WorkerConfig.get()
-    url = f"{config.orchestrator_host}:{config.orchestrator_port}/{uri}"
+    url = f"{config.orchestrator_url}/{uri}"
 
     async with aiohttp.ClientSession() as session:
         if method == "GET":
